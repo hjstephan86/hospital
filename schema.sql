@@ -62,12 +62,19 @@ CREATE TABLE IF NOT EXISTS medikamente (
 -- INDIZES — kritisch bei 10 Mio. Datensätzen
 -- ============================================================
 
+-- unaccent() ist als STABLE markiert und daher nicht direkt in
+-- Indexausdrücken zulässig; immutable Wrapper-Funktion notwendig.
+CREATE OR REPLACE FUNCTION immutable_unaccent(TEXT)
+RETURNS TEXT AS $$
+    SELECT public.unaccent('public.unaccent'::regdictionary, $1);
+$$ LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT;
+
 -- Volltextsuche (GIN) über Vor- und Nachname
 CREATE INDEX idx_patients_fts
     ON patients
     USING GIN (
         to_tsvector('german',
-            unaccent(vorname) || ' ' || unaccent(nachname)
+            immutable_unaccent(vorname) || ' ' || immutable_unaccent(nachname)
         )
     );
 
@@ -75,7 +82,7 @@ CREATE INDEX idx_patients_fts
 CREATE INDEX idx_patients_trgm
     ON patients
     USING GIN (
-        unaccent(vorname || ' ' || nachname) gin_trgm_ops
+        immutable_unaccent(vorname || ' ' || nachname) gin_trgm_ops
     );
 
 -- B-Tree Indizes für häufige Filter/Sortierung
@@ -84,6 +91,15 @@ CREATE INDEX idx_patients_status      ON patients (status);
 CREATE INDEX idx_patients_aufnahme    ON patients (aufnahmedatum DESC);
 CREATE INDEX idx_patients_number      ON patients (patient_number);
 CREATE INDEX idx_patients_versich     ON patients (versicherungsnr);
+
+-- Trigram-Indizes für die einzelnen OR-Zweige von search_patients():
+-- Bei einem gemeinsamen WHERE ... OR ... verwirft der Planer bei 10 Mio.
+-- Zeilen GIN-Indizes, sobald nur ein Zweig ohne passenden Index dabei ist
+-- (kein BitmapOr möglich) — daher pro Zweig ein eigener Index, kombiniert
+-- über UNION in der Funktion statt über OR in einem einzigen Scan.
+CREATE INDEX idx_patients_nachname_trgm ON patients USING GIN (immutable_unaccent(nachname) gin_trgm_ops);
+CREATE INDEX idx_patients_number_trgm   ON patients USING GIN (patient_number gin_trgm_ops);
+CREATE INDEX idx_patients_versich_trgm  ON patients USING GIN (versicherungsnr gin_trgm_ops);
 
 CREATE INDEX idx_diagnosen_patient    ON diagnosen (patient_id);
 CREATE INDEX idx_medikamente_patient  ON medikamente (patient_id);
@@ -115,27 +131,34 @@ $$ LANGUAGE plpgsql STABLE;
 -- FUNKTION: Filtersuche — sortiert, ohne LIMIT
 -- Für virtuelles Scrolling im Frontend
 -- ============================================================
+-- Als SQL-Funktion mit UNION statt einem einzigen OR-Filter: jeder Zweig
+-- nutzt so seinen eigenen GIN/Trigram-Index (siehe Indizes oben). Ein
+-- gemeinsamer OR-Filter über alle Bedingungen zwingt den Planer bei
+-- 10 Mio. Zeilen sonst zu einem vollständigen Sequential Scan.
 CREATE OR REPLACE FUNCTION search_patients(suchbegriff TEXT)
 RETURNS SETOF patients AS $$
-BEGIN
-    RETURN QUERY
-        SELECT p.*
-        FROM patients p
-        WHERE
-            to_tsvector('german',
-                unaccent(p.vorname) || ' ' || unaccent(p.nachname)
-            ) @@ plainto_tsquery('german', unaccent(suchbegriff))
-            OR unaccent(p.vorname || ' ' || p.nachname)
-                ILIKE unaccent(suchbegriff) || '%'
-            OR unaccent(p.nachname)
-                ILIKE unaccent(suchbegriff) || '%'
-            OR p.patient_number ILIKE suchbegriff || '%'
-            OR p.versicherungsnr ILIKE suchbegriff || '%'
-        ORDER BY
-            p.nachname,
-            p.vorname;
-END;
-$$ LANGUAGE plpgsql STABLE;
+    SELECT * FROM (
+        SELECT p.* FROM patients p
+        WHERE to_tsvector('german',
+                immutable_unaccent(p.vorname) || ' ' || immutable_unaccent(p.nachname)
+              ) @@ plainto_tsquery('german', immutable_unaccent(suchbegriff))
+        UNION
+        SELECT p.* FROM patients p
+        WHERE immutable_unaccent(p.vorname || ' ' || p.nachname)
+              ILIKE immutable_unaccent(suchbegriff) || '%'
+        UNION
+        SELECT p.* FROM patients p
+        WHERE immutable_unaccent(p.nachname)
+              ILIKE immutable_unaccent(suchbegriff) || '%'
+        UNION
+        SELECT p.* FROM patients p
+        WHERE p.patient_number ILIKE suchbegriff || '%'
+        UNION
+        SELECT p.* FROM patients p
+        WHERE p.versicherungsnr ILIKE suchbegriff || '%'
+    ) p
+    ORDER BY nachname, vorname;
+$$ LANGUAGE sql STABLE;
 
 -- ============================================================
 -- Beispieldaten

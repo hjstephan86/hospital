@@ -49,7 +49,10 @@ def generate_row(index: int) -> tuple:
     geburtsdatum   = random_date(date(1930, 1, 1), date(2005, 12, 31))
     geschlecht     = random.choice(["männlich", "weiblich", "divers"])
     kasse          = random.choice(KRANKENKASSEN)
-    versicherungsnr= f"{kasse}-{random.randint(100_000_000, 999_999_999)}"
+    # Index-basiert statt rein zufällig, da bei 10 Mio. Zeilen und nur 8
+    # Kassen-Präfixen reiner Zufall (Geburtstagsparadoxon) zwangsläufig zu
+    # Kollisionen mit dem UNIQUE-Constraint führt.
+    versicherungsnr= f"{kasse}-{index:09d}"
     blutgruppe     = random.choice(BLUTGRUPPEN)
     status         = random.choice(STATUS)
     epa_status     = random.choice(EPA_STATUS)
@@ -137,7 +140,7 @@ def run(args):
 
     cur.close()
     conn.close()
-    print(f"\n✓ {written:,} Patienten erfolgreich eingefügt.")
+    print(f"\n{written:,} Patienten erfolgreich eingefuegt.")
     print("Führe jetzt aus:")
     print("  REINDEX TABLE patients;")
     print("  VACUUM ANALYZE patients;")

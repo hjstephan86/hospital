@@ -43,8 +43,10 @@ public class PatientResource {
         if (q == null || q.isBlank()) {
             return getRandom(30);
         }
+        // Ohne Obergrenze kann ein häufiger Suchbegriff bei 10 Mio. Zeilen
+        // Millionen Treffer liefern und den Heap sprengen (OutOfMemoryError).
         List<Patient> result = em
-            .createNativeQuery("SELECT * FROM search_patients(:q)", Patient.class)
+            .createNativeQuery("SELECT * FROM search_patients(:q) LIMIT 500", Patient.class)
             .setParameter("q", q.trim())
             .getResultList();
         return Response.ok(result).build();

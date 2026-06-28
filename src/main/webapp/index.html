@@ -6,15 +6,17 @@
 <title>Patientenverwaltung</title>
 <style>
   :root {
-    --bg: #f4f6f9; --card: #fff; --primary: #2563eb;
-    --border: #e2e8f0; --text: #1e293b; --muted: #64748b;
-    --row-hover: #f0f6ff; --active: #dcfce7; --discharged: #fef9c3;
+    --bg: #f4f4f5; --card: #fff; --primary: #52525b;
+    --primary-hover: #71717a;
+    --accent: #3b5b6e; --accent-hover: #4f7388; --accent-light: #e1e9ec;
+    --border: #d4d4d8; --text: #27272a; --muted: #71717a;
+    --row-hover: #f4f4f5; --active: #e4e4e7; --discharged: #d4d4d8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
 
   header {
-    background: var(--primary); color: #fff;
+    background: var(--accent); color: #fff;
     padding: 14px 24px; display: flex;
     align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 100;
@@ -33,18 +35,20 @@
     border-radius: 8px; font-size: .95rem; outline: none;
     transition: border-color .2s;
   }
-  #searchInput:focus { border-color: var(--primary); }
+  #searchInput:focus { border-color: var(--accent); }
   #resultInfo { font-size: .82rem; color: var(--muted); white-space: nowrap; }
 
   .btn {
     padding: 8px 16px; border: none; border-radius: 8px;
     cursor: pointer; font-size: .88rem; font-weight: 500;
-    background: var(--primary); color: #fff; transition: opacity .15s;
+    background: var(--accent); color: #fff; transition: background .15s;
   }
-  .btn:hover { opacity: .87; }
+  .btn:hover { background: var(--accent-hover); }
   .btn-sm { padding: 4px 10px; font-size: .8rem; }
-  .btn-danger { background: #ef4444; }
-  .btn-warning { background: #f59e0b; }
+  .btn-danger { background: #3f3f46; }
+  .btn-danger:hover { background: #52525b; }
+  .btn-warning { background: #a1a1aa; }
+  .btn-warning:hover { background: #d4d4d8; }
 
   /* ---- virtuelles Scrolling ---- */
   #scrollContainer {
@@ -70,12 +74,12 @@
     display: inline-block; padding: 2px 8px; border-radius: 99px;
     font-size: .75rem; font-weight: 600;
   }
-  .badge-active   { background: #dcfce7; color: #166534; }
-  .badge-discharged { background: #fef9c3; color: #854d0e; }
-  .badge-deceased { background: #fee2e2; color: #991b1b; }
-  .badge-epa-active  { background: #dbeafe; color: #1d4ed8; }
-  .badge-epa-pending { background: #f3f4f6; color: #374151; }
-  .badge-epa-revoked { background: #fce7f3; color: #9d174d; }
+  .badge-active   { background: var(--accent-light); color: var(--accent); }
+  .badge-discharged { background: #d4d4d8; color: #3f3f46; }
+  .badge-deceased { background: #a1a1aa; color: #18181b; }
+  .badge-epa-active  { background: var(--accent-light); color: var(--accent); }
+  .badge-epa-pending { background: #f4f4f5; color: #52525b; }
+  .badge-epa-revoked { background: #d4d4d8; color: #3f3f46; }
 
   /* ---- Modal ---- */
   .modal-overlay {
@@ -99,7 +103,7 @@
     border-radius: 6px; font-size: .88rem; outline: none;
     transition: border-color .2s;
   }
-  input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
   .modal-footer { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
   .btn-outline {
     background: transparent; border: 1.5px solid var(--border);
@@ -119,7 +123,7 @@
 <body>
 
 <header>
-  <h1>🏥 Patientenverwaltung</h1>
+  <h1>Patientenverwaltung</h1>
   <button class="btn" onclick="openModal()">+ Neuer Patient</button>
 </header>
 
@@ -198,7 +202,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = '/api/patients';
+// Relativ zum Kontextpfad der Anwendung, damit der Aufruf unabhängig
+// vom Deployment-/Kontextnamen funktioniert (z.B. /hospital-management).
+const API = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/api/patients';
 const ROW_H = 42;          // px pro Zeile (geschätzt)
 const BUFFER = 5;          // Puffer-Zeilen oben/unten
 let allData = [];
@@ -235,8 +241,8 @@ function renderVisible() {
       <td><span class="badge badge-${p.status}">${statusLabel(p.status)}</span></td>
       <td><span class="badge badge-epa-${p.epaStatus}">${epaLabel(p.epaStatus)}</span></td>
       <td class="actions">
-        <button class="btn btn-sm btn-warning" onclick="editPatient(${p.id})">✏</button>
-        <button class="btn btn-sm btn-danger"  onclick="deletePatient(${p.id})">🗑</button>
+        <button class="btn btn-sm btn-warning" onclick="editPatient(${p.id})">Bearbeiten</button>
+        <button class="btn btn-sm btn-danger"  onclick="deletePatient(${p.id})">Löschen</button>
       </td>
     </tr>`;
   }
@@ -258,7 +264,7 @@ function epaLabel(s) {
 async function loadRandom() {
   showInfo('Lade …');
   try {
-    const r = await fetch(`${API}/random?limit=30`);
+    const r = await fetch(`${API}/random?limit=45`);
     allData = await r.json();
     showInfo(`${allData.length} zufällige Patienten angezeigt`);
     renderVisible();
@@ -268,7 +274,7 @@ async function loadRandom() {
 async function search(q) {
   showInfo('Suche …');
   try {
-    const url = q ? `${API}/search?q=${encodeURIComponent(q)}` : `${API}/random?limit=30`;
+    const url = q ? `${API}/search?q=${encodeURIComponent(q)}` : `${API}/random?limit=45`;
     const r = await fetch(url);
     allData = await r.json();
     const cnt = allData.length;

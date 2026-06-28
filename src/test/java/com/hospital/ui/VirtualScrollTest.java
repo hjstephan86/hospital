@@ -31,8 +31,8 @@ class VirtualScrollTest extends BaseUITest {
     @Test
     void initialLoad_spacerHeightMatchesRowCount() {
         // 2 Patienten × 42px = 84px (+thead ~46)
-        String height = page.locator("#virtualSpacer").evaluate(
-            "el => el.style.height", String.class);
+        String height = (String) page.locator("#virtualSpacer").evaluate(
+            "el => el.style.height");
         assertFalse(height.isEmpty(), "Spacer-Höhe soll gesetzt sein");
         // Mindestens 1 Zeile
         double px = Double.parseDouble(height.replace("px", "").trim());
@@ -76,8 +76,8 @@ class VirtualScrollTest extends BaseUITest {
             }
         );
 
-        String height = page.locator("#virtualSpacer").evaluate(
-            "el => el.style.height", String.class);
+        String height = (String) page.locator("#virtualSpacer").evaluate(
+            "el => el.style.height");
         double px = Double.parseDouble(height.replace("px", "").trim());
         // 500 × 42px = 21000px + thead ≈ 21046px
         assertTrue(px > 10000, "Spacer-Höhe für 500 Patienten > 10000px erwartet, war: " + px);
