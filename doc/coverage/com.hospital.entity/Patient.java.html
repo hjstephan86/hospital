@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Patient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Krankenhaus Patientenverwaltung</a> &gt; <a href="index.source.html" class="el_package">com.hospital.entity</a> &gt; <span class="el_source">Patient.java</span></div><h1>Patient.java</h1><pre class="source lang-java linenums">package com.hospital.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;patients&quot;)
+<span class="fc" id="L9">public class Patient {</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = &quot;patient_number&quot;, unique = true, nullable = false, length = 20)
+    private String patientNumber;
+
+    @Column(name = &quot;vorname&quot;, nullable = false, length = 100)
+    private String vorname;
+
+    @Column(name = &quot;nachname&quot;, nullable = false, length = 100)
+    private String nachname;
+
+    @Column(name = &quot;geburtsdatum&quot;, nullable = false)
+    private LocalDate geburtsdatum;
+
+    @Column(name = &quot;geschlecht&quot;, length = 10)
+    private String geschlecht;
+
+    @Column(name = &quot;versicherungsnr&quot;, unique = true, length = 30)
+    private String versicherungsnr;
+
+    @Column(name = &quot;blutgruppe&quot;, length = 5)
+    private String blutgruppe;
+
+<span class="fc" id="L36">    @Column(name = &quot;status&quot;, nullable = false, length = 20)</span>
+    private String status = &quot;active&quot;;
+
+<span class="fc" id="L39">    @Column(name = &quot;epa_status&quot;, length = 20)</span>
+    private String epaStatus = &quot;pending&quot;;
+
+    @Column(name = &quot;allergien&quot;, columnDefinition = &quot;TEXT&quot;)
+    private String allergien;
+
+    @Column(name = &quot;notfallkontakt&quot;, length = 255)
+    private String notfallkontakt;
+
+    @Column(name = &quot;adresse&quot;, columnDefinition = &quot;TEXT&quot;)
+    private String adresse;
+
+    @Column(name = &quot;telefon&quot;, length = 30)
+    private String telefon;
+
+    @Column(name = &quot;email&quot;, length = 150)
+    private String email;
+
+    @Column(name = &quot;aufnahmedatum&quot;)
+    private LocalDateTime aufnahmedatum;
+
+    @Column(name = &quot;entlassdatum&quot;)
+    private LocalDateTime entlassdatum;
+
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = &quot;updated_at&quot;)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+<span class="fc" id="L71">        createdAt = LocalDateTime.now();</span>
+<span class="fc" id="L72">        updatedAt = LocalDateTime.now();</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (aufnahmedatum == null) aufnahmedatum = LocalDateTime.now();</span>
+<span class="fc" id="L74">    }</span>
+
+    @PreUpdate
+    protected void onUpdate() {
+<span class="fc" id="L78">        updatedAt = LocalDateTime.now();</span>
+<span class="fc" id="L79">    }</span>
+
+    // ---- Getter &amp; Setter ----
+
+<span class="fc" id="L83">    public Long getId() { return id; }</span>
+<span class="fc" id="L84">    public void setId(Long id) { this.id = id; }</span>
+
+<span class="nc" id="L86">    public String getPatientNumber() { return patientNumber; }</span>
+<span class="fc" id="L87">    public void setPatientNumber(String v) { this.patientNumber = v; }</span>
+
+<span class="fc" id="L89">    public String getVorname() { return vorname; }</span>
+<span class="fc" id="L90">    public void setVorname(String v) { this.vorname = v; }</span>
+
+<span class="fc" id="L92">    public String getNachname() { return nachname; }</span>
+<span class="fc" id="L93">    public void setNachname(String v) { this.nachname = v; }</span>
+
+<span class="fc" id="L95">    public LocalDate getGeburtsdatum() { return geburtsdatum; }</span>
+<span class="fc" id="L96">    public void setGeburtsdatum(LocalDate v) { this.geburtsdatum = v; }</span>
+
+<span class="fc" id="L98">    public String getGeschlecht() { return geschlecht; }</span>
+<span class="fc" id="L99">    public void setGeschlecht(String v) { this.geschlecht = v; }</span>
+
+<span class="fc" id="L101">    public String getVersicherungsnr() { return versicherungsnr; }</span>
+<span class="fc" id="L102">    public void setVersicherungsnr(String v) { this.versicherungsnr = v; }</span>
+
+<span class="fc" id="L104">    public String getBlutgruppe() { return blutgruppe; }</span>
+<span class="fc" id="L105">    public void setBlutgruppe(String v) { this.blutgruppe = v; }</span>
+
+<span class="fc" id="L107">    public String getStatus() { return status; }</span>
+<span class="fc" id="L108">    public void setStatus(String v) { this.status = v; }</span>
+
+<span class="fc" id="L110">    public String getEpaStatus() { return epaStatus; }</span>
+<span class="fc" id="L111">    public void setEpaStatus(String v) { this.epaStatus = v; }</span>
+
+<span class="fc" id="L113">    public String getAllergien() { return allergien; }</span>
+<span class="fc" id="L114">    public void setAllergien(String v) { this.allergien = v; }</span>
+
+<span class="fc" id="L116">    public String getNotfallkontakt() { return notfallkontakt; }</span>
+<span class="fc" id="L117">    public void setNotfallkontakt(String v) { this.notfallkontakt = v; }</span>
+
+<span class="fc" id="L119">    public String getAdresse() { return adresse; }</span>
+<span class="fc" id="L120">    public void setAdresse(String v) { this.adresse = v; }</span>
+
+<span class="fc" id="L122">    public String getTelefon() { return telefon; }</span>
+<span class="fc" id="L123">    public void setTelefon(String v) { this.telefon = v; }</span>
+
+<span class="fc" id="L125">    public String getEmail() { return email; }</span>
+<span class="fc" id="L126">    public void setEmail(String v) { this.email = v; }</span>
+
+<span class="fc" id="L128">    public LocalDateTime getAufnahmedatum() { return aufnahmedatum; }</span>
+<span class="fc" id="L129">    public void setAufnahmedatum(LocalDateTime v) { this.aufnahmedatum = v; }</span>
+
+<span class="fc" id="L131">    public LocalDateTime getEntlassdatum() { return entlassdatum; }</span>
+<span class="fc" id="L132">    public void setEntlassdatum(LocalDateTime v) { this.entlassdatum = v; }</span>
+
+<span class="fc" id="L134">    public LocalDateTime getCreatedAt() { return createdAt; }</span>
+<span class="fc" id="L135">    public LocalDateTime getUpdatedAt() { return updatedAt; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

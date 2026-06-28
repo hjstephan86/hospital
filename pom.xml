@@ -17,7 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <junit.version>5.10.2</junit.version>
-        <mockito.version>5.11.0</mockito.version>
+        <mockito.version>5.23.0</mockito.version>
         <jacoco.version>0.8.11</jacoco.version>
     </properties>
 
@@ -98,6 +98,15 @@
             <version>3.6.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- jakarta.jakartaee-api liefert nur die API; für Response.ok().build()
+             in Unit-Tests wird eine RuntimeDelegate-Implementierung benötigt
+             (zur Laufzeit auf WildFly durch RESTEasy bereitgestellt). -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-core</artifactId>
+            <version>7.0.2.Final</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -133,6 +142,9 @@
                         <id>report</id>
                         <phase>verify</phase>
                         <goals><goal>report</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/doc/coverage</outputDirectory>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>check</id>

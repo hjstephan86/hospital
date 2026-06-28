@@ -87,7 +87,10 @@ public abstract class BaseUITest {
 
     @BeforeEach
     void openPage() {
-        wm.resetMappings();
+        // resetMappings() allein löscht nicht das Request-Journal — ohne
+        // resetAll() sehen verify()-Aufrufe in einem Test auch Requests aus
+        // vorangegangenen Tests derselben Klasse (Testreihenfolge-Abhängigkeit).
+        wm.resetAll();
 
         // Standard-Stub: initiale Zufallsliste
         stubFor(get(urlPathEqualTo("/api/patients/random"))
@@ -151,8 +154,9 @@ public abstract class BaseUITest {
 
     protected void typeInSearch(String text) {
         Locator input = page.locator("#searchInput");
+        // fill() löst bereits ein "input"-Event aus; ein zusätzliches
+        // press("a") würde den eingegebenen Text um ein "a" verlängern.
         input.fill(text);
-        input.press("a"); // Trigger input-Event
         // Auf Debouncing warten (300 ms + Puffer)
         page.waitForTimeout(450);
     }

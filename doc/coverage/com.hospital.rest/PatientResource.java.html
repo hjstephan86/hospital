@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="de"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PatientResource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Krankenhaus Patientenverwaltung</a> &gt; <a href="index.source.html" class="el_package">com.hospital.rest</a> &gt; <span class="el_source">PatientResource.java</span></div><h1>PatientResource.java</h1><pre class="source lang-java linenums">package com.hospital.rest;
+
+import com.hospital.entity.Patient;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.*;
+import java.util.List;
+
+@Path(&quot;/patients&quot;)
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@RequestScoped
+<span class="fc" id="L15">public class PatientResource {</span>
+
+    @PersistenceContext(unitName = &quot;hospitalPU&quot;)
+    private EntityManager em;
+
+    // ----------------------------------------------------------
+    // GET /patients/random?limit=30
+    // Initiale Ansicht: zufällige Stichprobe, unsortiert
+    // Verwendet die DB-Funktion random_patients() via TABLESAMPLE
+    // ----------------------------------------------------------
+    @GET
+    @Path(&quot;/random&quot;)
+    public Response getRandom(@QueryParam(&quot;limit&quot;) @DefaultValue(&quot;30&quot;) int limit) {
+<span class="fc" id="L28">        List&lt;Patient&gt; result = em</span>
+<span class="fc" id="L29">            .createNativeQuery(&quot;SELECT * FROM random_patients(:lim)&quot;, Patient.class)</span>
+<span class="fc" id="L30">            .setParameter(&quot;lim&quot;, limit)</span>
+<span class="fc" id="L31">            .getResultList();</span>
+<span class="fc" id="L32">        return Response.ok(result).build();</span>
+    }
+
+    // ----------------------------------------------------------
+    // GET /patients/search?q=Müller
+    // Filtersuche: sortiert, kein LIMIT — virtuelles Scrolling
+    // übernimmt Mengenbegrenzung im Frontend
+    // ----------------------------------------------------------
+    @GET
+    @Path(&quot;/search&quot;)
+    public Response search(@QueryParam(&quot;q&quot;) @DefaultValue(&quot;&quot;) String q) {
+<span class="fc bfc" id="L43" title="All 4 branches covered.">        if (q == null || q.isBlank()) {</span>
+<span class="fc" id="L44">            return getRandom(30);</span>
+        }
+        // Ohne Obergrenze kann ein häufiger Suchbegriff bei 10 Mio. Zeilen
+        // Millionen Treffer liefern und den Heap sprengen (OutOfMemoryError).
+<span class="fc" id="L48">        List&lt;Patient&gt; result = em</span>
+<span class="fc" id="L49">            .createNativeQuery(&quot;SELECT * FROM search_patients(:q) LIMIT 500&quot;, Patient.class)</span>
+<span class="fc" id="L50">            .setParameter(&quot;q&quot;, q.trim())</span>
+<span class="fc" id="L51">            .getResultList();</span>
+<span class="fc" id="L52">        return Response.ok(result).build();</span>
+    }
+
+    // ----------------------------------------------------------
+    // GET /patients/{id}
+    // ----------------------------------------------------------
+    @GET
+    @Path(&quot;/{id}&quot;)
+    public Response getById(@PathParam(&quot;id&quot;) Long id) {
+<span class="fc" id="L61">        Patient p = em.find(Patient.class, id);</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (p == null) return Response.status(Response.Status.NOT_FOUND).build();</span>
+<span class="fc" id="L63">        return Response.ok(p).build();</span>
+    }
+
+    // ----------------------------------------------------------
+    // POST /patients
+    // ----------------------------------------------------------
+    @POST
+    @Transactional
+    public Response create(Patient p) {
+<span class="fc" id="L72">        em.persist(p);</span>
+<span class="fc" id="L73">        em.flush();</span>
+<span class="fc" id="L74">        return Response.status(Response.Status.CREATED).entity(p).build();</span>
+    }
+
+    // ----------------------------------------------------------
+    // PUT /patients/{id}
+    // ----------------------------------------------------------
+    @PUT
+    @Path(&quot;/{id}&quot;)
+    @Transactional
+    public Response update(@PathParam(&quot;id&quot;) Long id, Patient updated) {
+<span class="fc" id="L84">        Patient existing = em.find(Patient.class, id);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (existing == null) return Response.status(Response.Status.NOT_FOUND).build();</span>
+
+<span class="fc" id="L87">        existing.setVorname(updated.getVorname());</span>
+<span class="fc" id="L88">        existing.setNachname(updated.getNachname());</span>
+<span class="fc" id="L89">        existing.setGeburtsdatum(updated.getGeburtsdatum());</span>
+<span class="fc" id="L90">        existing.setGeschlecht(updated.getGeschlecht());</span>
+<span class="fc" id="L91">        existing.setVersicherungsnr(updated.getVersicherungsnr());</span>
+<span class="fc" id="L92">        existing.setBlutgruppe(updated.getBlutgruppe());</span>
+<span class="fc" id="L93">        existing.setStatus(updated.getStatus());</span>
+<span class="fc" id="L94">        existing.setEpaStatus(updated.getEpaStatus());</span>
+<span class="fc" id="L95">        existing.setAllergien(updated.getAllergien());</span>
+<span class="fc" id="L96">        existing.setNotfallkontakt(updated.getNotfallkontakt());</span>
+<span class="fc" id="L97">        existing.setAdresse(updated.getAdresse());</span>
+<span class="fc" id="L98">        existing.setTelefon(updated.getTelefon());</span>
+<span class="fc" id="L99">        existing.setEmail(updated.getEmail());</span>
+<span class="fc" id="L100">        existing.setEntlassdatum(updated.getEntlassdatum());</span>
+
+<span class="fc" id="L102">        em.merge(existing);</span>
+<span class="fc" id="L103">        return Response.ok(existing).build();</span>
+    }
+
+    // ----------------------------------------------------------
+    // DELETE /patients/{id}
+    // ----------------------------------------------------------
+    @DELETE
+    @Path(&quot;/{id}&quot;)
+    @Transactional
+    public Response delete(@PathParam(&quot;id&quot;) Long id) {
+<span class="fc" id="L113">        Patient p = em.find(Patient.class, id);</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (p == null) return Response.status(Response.Status.NOT_FOUND).build();</span>
+<span class="fc" id="L115">        em.remove(p);</span>
+<span class="fc" id="L116">        return Response.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

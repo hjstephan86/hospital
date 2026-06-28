@@ -1,0 +1,4 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Krankenhaus Patientenverwaltung,com.hospital.rest,PatientResource,0,170,0,10,0,41,0,12,0,7
+Krankenhaus Patientenverwaltung,com.hospital.rest,RestApplication,3,0,0,0,1,0,1,0,1,0
+Krankenhaus Patientenverwaltung,com.hospital.entity,Patient,3,148,1,1,1,44,2,38,1,38
