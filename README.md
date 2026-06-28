@@ -213,7 +213,7 @@ pip install faker psycopg2-binary tqdm
 ### Skript ausführen
 
 ```bash
-python3 generate_patients.py \
+python3 gen-patients.py \
   --host localhost \
   --port 5432 \
   --db hospital_db \
@@ -222,7 +222,7 @@ python3 generate_patients.py \
   --count 10000000
 ```
 
-Das Skript (`generate_patients.py`) nutzt:
+Das Skript (`gen-patients.py`) nutzt:
 - **Batch-Inserts** (1000 Zeilen pro Transaktion) für maximale Performance
 - **`COPY`-Protokoll** via `psycopg2` (deutlich schneller als einzelne INSERTs)
 - Realistische deutsche Namen, Adressen, Versicherungsnummern via `Faker`
@@ -280,7 +280,7 @@ hospital/
 ├── README.md
 ├── pom.xml
 ├── schema.sql
-├── generate_patients.py
+├── gen-patients.py
 └── src/
     ├── main/
     │   ├── java/com/hospital/
