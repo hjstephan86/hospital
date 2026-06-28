@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="3.0"
+    xmlns="https://jakarta.ee/xml/ns/persistence"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+        https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+
+    <persistence-unit name="hospitalPU" transaction-type="JTA">
+        <jta-data-source>java:/PostgresDS</jta-data-source>
+
+        <class>com.hospital.entity.Patient</class>
+
+        <properties>
+            <!-- Schema-Verwaltung: validate (Produktion), update (Entwicklung) -->
+            <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
+
+            <!-- Performance -->
+            <property name="hibernate.jdbc.batch_size" value="50"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
+            <property name="hibernate.jdbc.fetch_size" value="100"/>
+
+            <!-- Connection Pool -->
+            <property name="hibernate.connection.pool_size" value="20"/>
+
+            <!-- Dialekt -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+
+            <!-- Logging: nur in Entwicklung aktivieren -->
+            <!-- <property name="hibernate.show_sql" value="true"/> -->
+            <!-- <property name="hibernate.format_sql" value="true"/> -->
+        </properties>
+    </persistence-unit>
+</persistence>
